@@ -2,6 +2,7 @@
 namespace app\model;
 
 use app\config\Database;
+use \PDO;
 
 class LoginModel extends Database
 {
