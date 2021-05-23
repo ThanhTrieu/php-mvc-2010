@@ -31,12 +31,16 @@ class LoginController extends Controller
 			// hay kien tra du lieu roi moi truyen vao model
 
 			$info = $this->loginModel->checkLoginUser($user, $pass);
+			
 			if(!empty($info)){
 				// vao trang dashboard
 				// luu thong tin user vao session
 				$_SESSION['user'] = $info['username'];
 				$_SESSION['id_user'] = $info['id'];
 				$_SESSION['email'] = $info['email'];
+				$_SESSION['role'] = $info['role'];
+				$_SESSION['phone'] = $info['phone'];
+				
 				header('Location:index.php?c=dashboard');
 			} else {
 				header('Location:index.php?state=fail');
