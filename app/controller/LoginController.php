@@ -51,7 +51,12 @@ class LoginController extends Controller
 
 	public function logout() 
 	{
-		
+		if(isset($_POST['btnLogout'])){
+			// huy het session
+			session_destroy();
+			// quay ve trang login
+			header('Location:index.php?c=login');
+		}
 	}
 }
 
