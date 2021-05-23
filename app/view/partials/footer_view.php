@@ -42,7 +42,7 @@
                             Cancel
                         </button>
 
-                        <button type="submit" class="btn btn-primary">
+                        <button name="btnLogout" type="submit" class="btn btn-primary">
                             Logout
                         </button>
                     </form>

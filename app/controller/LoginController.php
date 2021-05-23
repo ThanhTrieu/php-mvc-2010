@@ -31,7 +31,7 @@ class LoginController extends Controller
 			// hay kien tra du lieu roi moi truyen vao model
 
 			$info = $this->loginModel->checkLoginUser($user, $pass);
-			
+
 			if(!empty($info)){
 				// vao trang dashboard
 				// luu thong tin user vao session
@@ -48,6 +48,17 @@ class LoginController extends Controller
 
 		}
 	}
+
+	public function logout() 
+	{
+		
+	}
 }
+
+
+
+
+
+
 
 
