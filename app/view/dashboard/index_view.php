@@ -1,3 +1,4 @@
+<?php if(!defined('ROOT_PATH')) { exit('can not access'); } ?>
 
 <!-- Begin Page Content -->
 <div class="container-fluid">
