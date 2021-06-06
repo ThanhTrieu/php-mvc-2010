@@ -11,14 +11,27 @@ class BrandModel extends Database
 		parent::__construct();
 	}
 
-	public function getAllBrand()
+	public function getAllBrand($keyword = '')
 	{
 		$allBrand = [];
-		$sql = "SELECT * FROM `brand` ";
+		$key = "%".$keyword."%";
+
+		// chi lay ra thuong hieu dang duoc dung
+		if(empty($keyword)) {
+			$sql = "SELECT * FROM `brand` WHERE `status` = 1 ";
+		} else {
+			$sql = "SELECT * FROM `brand` WHERE `name` LIKE :key1 OR `address` LIKE :key2 AND `status` = 1";
+		}
+		
 		$stmt = $this->conDb->prepare($sql);
 
-		if($stmt){
-			// vi cau lenh sql ko co tham so truyen vao nen ko can kiem tra
+		if($stmt) {
+
+			if(!empty($keyword)) {
+				$stmt->bindParam(':key1', $key, PDO::PARAM_STR);
+				$stmt->bindParam(':key2', $key, PDO::PARAM_STR);
+			}
+			
 			// thuc thi cau lenh
 			if($stmt->execute()){
 				// kiem tra co data tra ve ko
@@ -81,6 +94,38 @@ class BrandModel extends Database
 			}
 		}
 		return $flag;
+	}
+
+	public function deleteBrandById($id = 0) 
+	{
+		$flag = false;
+		$sql = "UPDATE `brand` SET `status` = 0 WHERE `id` = :id ";
+		$stmt = $this->conDb->prepare($sql);
+		if($stmt){
+			$stmt->bindParam(':id',$id,PDO::PARAM_INT);
+			if($stmt->execute()){
+				$flag = true;
+				$stmt->closeCursor();
+			}
+		}
+		return $flag;
+	}
+
+	public function getInfoBrandById($id) 
+	{
+		$data = [];
+		$sql = "SELECT * FROM `brand` WHERE `id` = :id ";
+		$stmt = $this->conDb->prepare($sql);
+		if($stmt){
+			$stmt->bindParam(':id',$id,PDO::PARAM_INT);
+			if($stmt->execute()){
+				if($stmt->rowCount() > 0){
+					$data = $stmt->fetch(PDO::FETCH_ASSOC);
+				}
+				$stmt->closeCursor();
+			}
+		}
+		return $data;
 	}
 }
 

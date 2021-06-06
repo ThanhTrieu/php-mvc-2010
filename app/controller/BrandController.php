@@ -3,10 +3,12 @@ namespace app\controller;
 
 use app\controller\BaseController as Controller;
 use app\model\BrandModel;
+use app\libs\Pagination;
 
 class BrandController extends Controller
 {
 	private $brandModel;
+	private $panigate;
 
 	public function __construct()
 	{
@@ -17,15 +19,30 @@ class BrandController extends Controller
 
 		// khoi tao doi tuong truy cap vao model
 		$this->brandModel = new BrandModel();
+		$this->panigate = new Pagination();
 	}
 
 	public function index()
 	{
 		$data = [];
+		$keyword = $_GET['s'] ?? '';
+		$keyword = trim(strip_tags($keyword));
+
+		// tao link phan trang
+		$arrLink = [
+			'c' => 'brand',
+			'm' => 'index',
+			'page' => '{page}',
+			's' => $keyword
+		];
+
+		$link = $this->panigate->createLink($arrLink);
+
 		// xu ly logic o day
-		$brands = $this->brandModel->getAllBrand();
+		$brands = $this->brandModel->getAllBrand($keyword);
 		$data['brands'] = $brands;
 		$data['title'] = 'Quan ly thuong hieu';
+		$data['keyword'] = $keyword;
 
 		// load giao dien
 		$this->loadSideBar();
@@ -115,6 +132,61 @@ class BrandController extends Controller
 				// quay ve form giao dien add brand
 				header('Location:?c=brand&m=add&state=err');
 			}
+		}
+	}
+
+	public function delete()
+	{
+		$id = $_POST['id'] ?? '';
+		$id = is_numeric($id) ? $id : 0;
+
+		if($id > 0){
+			// viet model de xoa brand theo id cua no
+			$del = $this->brandModel->deleteBrandById($id);
+			if($del) {
+				echo "SUCCESS";
+			} else {
+				echo "FAIL";
+			}
+		} else {
+			echo "ERROR_PARAM";
+		}
+	}
+
+	public function edit()
+	{
+		$id = $_GET["id"] ?? '';
+		$id = is_numeric($id) ? $id : 0;
+
+		$data = [];
+		$data['title'] = 'Edit brand';
+
+		// lay thong tin chi tiet cua brand theo id
+		$infoBrand = $this->brandModel->getInfoBrandById($id);
+
+
+		if(empty($infoBrand)) {
+			$data['infoBrand'] = [];
+		} else {
+			$data['infoBrand'] = $infoBrand;
+		}
+
+		// load giao dien
+		$this->loadSideBar();
+		$this->loadNavBar();
+		// hien thi giao dien va do du lieu ra ngoai giao dien view
+		// cai key cua mang $data(minh dat ten) se la 1 bien ben ngoai view
+		$this->loadView('brand/edit_view', $data);
+	}
+
+	public function handleEdit()
+	{
+		if(isset($_POST['btnEditBrand'])){
+			// lay id can update 
+			$id = $_GET['id'] ?? '';
+			$id = is_numeric($id) ? $id : 0;
+
+			// cac ban tu xu ly tiep :
 		}
 	}
 
