@@ -18,6 +18,38 @@
       </div>
     </div>
   <?php else: ?>
+
+    <!-- loi khi co tinh ko nhap du lieu ma doi update -->
+    <?php if(!empty($messErrors)): ?>
+      <div class="row my-3">
+        <div class="col-sm-12 col-lg-12 col-md-12">
+          <ul>
+            <?php foreach($messErrors as $err): ?>
+              <li class="text-danger"><?= $err; ?></li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <!-- loi khi update trung ten thuong hieu -->
+    <?php if($status === 'exist'): ?>
+      <div class="row my-3">
+        <div class="col-sm-12 col-lg-12 col-md-12">
+            <h4 class="text-danger">Ten thuong hieu da ton tai</h4>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <!-- loi khi update khong thanh cong/ he thong code co van de -->
+    <?php if($status === 'fail'): ?>
+      <div class="row my-3">
+        <div class="col-sm-12 col-lg-12 col-md-12">
+            <h4 class="text-danger">Co loi xay ra, vui long thu lai sau</h4>
+        </div>
+      </div>
+    <?php endif; ?>
+
     <div class="row my-3">
       <div class="col-sm-12 col-lg-12 col-md-12">
         <form action="?c=brand&m=handleEdit&id=<?= $infoBrand['id']; ?>" method="post" enctype="multipart/form-data">

@@ -11,6 +11,84 @@ class BrandModel extends Database
 		parent::__construct();
 	}
 
+	public function updateBrand($nameBrand, $addBrand, $description, $logoBrand, $id)
+	{
+		$flag = false;
+		$updatedTime = date('Y-m-d H:i:s');
+		$sql  = "UPDATE `brand` SET `name` = :name, `address` = :address, `description` = :description, `logo` = :logo, `updated_time` = :updated_time WHERE `id` = :id ";
+		$stmt = $this->conDb->prepare($sql);
+
+		if($stmt){
+			$stmt->bindParam(':name',$nameBrand,PDO::PARAM_STR);
+			$stmt->bindParam(':address',$addBrand,PDO::PARAM_STR);
+			$stmt->bindParam(':description',$description,PDO::PARAM_STR);
+			$stmt->bindParam(':logo',$logoBrand,PDO::PARAM_STR);
+			$stmt->bindParam(':updated_time',$updatedTime,PDO::PARAM_STR);
+			$stmt->bindParam(':id',$id,PDO::PARAM_INT);
+
+			if($stmt->execute()) {
+				$flag = true;
+				$stmt->closeCursor();
+			}
+		}
+		// true: update thanh cong
+		return $flag;;
+	}
+
+	public function checkUpdateNameBrand($name, $id = 0)
+	{
+		$flag = true;
+		$sql = "SELECT `name` FROM `brand` WHERE `name` = :name AND `id` <> :id ";
+		$stmt = $this->conDb->prepare($sql);
+		if($stmt){
+			$stmt->bindParam(':name',$name,PDO::PARAM_STR);
+			$stmt->bindParam(':id',$id,PDO::PARAM_INT);
+			if($stmt->execute()){
+				if($stmt->rowCount() > 0) {
+					// loai chinh ten thuong hieu cua id do - neu ton tai thi la sai
+					// nhung thang khac co ten thuong hieu do roi
+					$flag = false;
+				}
+				$stmt->closeCursor();
+			}
+		}
+		// true :cho update
+		return $flag;
+	}
+
+	public function getDataBrandByPage($start, $limited, $keyword = '')
+	{
+		$listBrands = [];
+		$key = "%".$keyword."%";
+
+		if(empty($keyword)){
+			// phan trang khong kem theo tim kiem
+			$sql = "SELECT * FROM `brand` WHERE `status` = 1 LIMIT :start, :limited";
+		} else {
+			// phan trang co kem theo tim kiem
+			$sql = "SELECT * FROM `brand` WHERE `name` LIKE :k1 OR `address` LIKE :k2 AND `status` = 1 LIMIT :start, :limited";
+		}
+		// :k1 - :k2 chinh la $key
+		$stmt = $this->conDb->prepare($sql);
+		if($stmt){
+			if(!empty($keyword)){
+				// co tim kiem voi phan trang
+				$stmt->bindParam(':k1', $key, PDO::PARAM_STR);
+				$stmt->bindParam(':k2', $key, PDO::PARAM_STR);
+			}
+			$stmt->bindParam(':start', $start, PDO::PARAM_INT);
+			$stmt->bindParam(':limited', $limited, PDO::PARAM_INT);
+
+			if($stmt->execute()){
+				if($stmt->rowCount() > 0){
+					$listBrands = $stmt->fetchAll(PDO::FETCH_ASSOC);
+				}
+				$stmt->closeCursor();
+			}
+		}
+		return $listBrands;
+	}
+
 	public function getAllBrand($keyword = '')
 	{
 		$allBrand = [];

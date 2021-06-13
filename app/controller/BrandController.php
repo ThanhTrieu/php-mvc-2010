@@ -9,6 +9,7 @@ class BrandController extends Controller
 {
 	private $brandModel;
 	private $panigate;
+	private $showItems = 2; // hien dl tren 1 trang
 
 	public function __construct()
 	{
@@ -25,8 +26,13 @@ class BrandController extends Controller
 	public function index()
 	{
 		$data = [];
+
 		$keyword = $_GET['s'] ?? '';
 		$keyword = trim(strip_tags($keyword));
+
+		// lay tham so page tren url
+		$page = $_GET['page'] ?? '';
+		$page = (is_numeric($page) && $page > 0) ? $page : 1;
 
 		// tao link phan trang
 		$arrLink = [
@@ -40,7 +46,18 @@ class BrandController extends Controller
 
 		// xu ly logic o day
 		$brands = $this->brandModel->getAllBrand($keyword);
-		$data['brands'] = $brands;
+		// can lay ra dc totalRecord cua bang brand
+		$totalRecord = count($brands);
+
+		// lay dc cai start va template phan trang
+		$arrPagination = $this->panigate->createPaginate($link, $totalRecord, $this->showItems, $page);
+
+		// viet ham trong model de lay du lieu phan trang theo keyword
+		$listBrands = $this->brandModel->getDataBrandByPage($arrPagination['start'], $this->showItems, $keyword);
+
+
+		$data['brands'] = $listBrands;
+		$data['pagination'] = $arrPagination['html_page'];
 		$data['title'] = 'Quan ly thuong hieu';
 		$data['keyword'] = $keyword;
 
@@ -168,7 +185,18 @@ class BrandController extends Controller
 		if(empty($infoBrand)) {
 			$data['infoBrand'] = [];
 		} else {
-			$data['infoBrand'] = $infoBrand;
+			
+			// xu ly hien thong bao loi cho nguoi dung biet
+			$status = $_GET['status'] ?? '';
+
+			$messErrors = [];
+			if($status === 'error' && isset($_SESSION['errEditBrand'])){
+				$messErrors = $_SESSION['errEditBrand'];
+			}
+
+			$data['status']     = $status;
+			$data['messErrors'] = $messErrors;
+			$data['infoBrand']  = $infoBrand;
 		}
 
 		// load giao dien
@@ -186,7 +214,73 @@ class BrandController extends Controller
 			$id = $_GET['id'] ?? '';
 			$id = is_numeric($id) ? $id : 0;
 
-			// cac ban tu xu ly tiep :
+			$infoBrand = $this->brandModel->getInfoBrandById($id);
+			if(empty($infoBrand)){
+				// quay lai dung form edit
+				header('Location:?c=brand&m=edit&id='.$id);
+			} else {
+				// co ton tai du lieu - xu ly tiep
+				$nameBrand   = $_POST['nameBrand'] ?? '';
+				$addBrand    = $_POST['addBrand'] ?? '';
+				$description = $_POST['descriptionBrand'] ?? '';
+
+				// mac dinh lay dung bang logo cu
+				$logoBrand = $infoBrand['logo'];
+				// kiem tra xem nguoi co thay anh logo ko ?
+				// neu co cap nhat lai anh moi, neu ko giu nguyen lai anh cu
+				if(!empty($_FILES['logoBrand']['name']) && $_FILES['logoBrand']['error'] == 0){
+					// co thay doi anh logo
+					$logoBrand = uploadFileImage($_FILES['logoBrand']);
+				}
+
+				// $logoBrand : la rong ==> uploadFileImage loi
+				
+				// validate data
+				$flagErr = true;
+				$arrError = $this->validateDataBrand($nameBrand, $addBrand, $description, $logoBrand);
+
+				// kiem tra xem co loi hay ko?
+				foreach ($arrError as $val) {
+					if(!empty($val)) {
+						$flagErr = false;
+						break;
+					}
+				}
+
+				if($flagErr){
+					// moi du lieu hop le
+					// neu ton tai session loi thi xoa no di
+					if(isset($_SESSION['errEditBrand'])){
+						unset($_SESSION['errEditBrand']);
+					}
+					// kiem tra xem ten thuong hieu can sua co ton tai trong db ko? loai tru chinh thang do
+					// loai tru chinh thang do: chinh la truong hop khong sua ten thuong hieu
+					$checkUpdate = $this->brandModel->checkUpdateNameBrand($nameBrand, $id);
+					if($checkUpdate ){
+						// tien hanh update
+						$up = $this->brandModel->updateBrand($nameBrand, $addBrand, $description, $logoBrand, $id);
+						if($up){
+							// quay ra trang list Brands
+							header('Location:?c=brand');
+						} else {
+							// khong update thanh cong
+							// quay ve lai dung form edit
+							header('Location:?c=brand&m=edit&id='.$id.'&status=fail');
+						}
+
+					} else {
+						// khong cho update
+						// quay ve lai dung form edit
+						header('Location:?c=brand&m=edit&id='.$id.'&status=exist');
+					}
+				} else {
+					// du lieu khong hop le
+					// gan mang loi vao session de sau nay thong ra view
+					$_SESSION['errEditBrand'] = $arrError;
+					// quay ve lai dung form edit
+					header('Location:?c=brand&m=edit&id='.$id.'&status=error');
+				}
+			}
 		}
 	}
 
